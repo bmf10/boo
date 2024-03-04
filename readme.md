@@ -7,6 +7,7 @@ Boo Coding Assessment
 To run this project, you will need to add the following environment variables to your .env file
 
 `MONGO_DB_URI`
+`SECRET_TEXT`
 
 ## Run Locally
 
@@ -56,11 +57,23 @@ Try API here: [Postman](https://www.postman.com/bmf10/workspace/boo/collection/9
   POST /user
 ```
 
-| Parameter | Type     | Description  |
-| :-------- | :------- | :----------- |
-| `email`   | `string` | **Required** |
-| `name`    | `string` | **Required** |
-| `image`   | `string` | **Required** |
+| Parameter  | Type     | Description  |
+| :--------- | :------- | :----------- |
+| `email`    | `string` | **Required** |
+| `name`     | `string` | **Required** |
+| `image`    | `string` |              |
+| `password` | `string` | **Required** |
+
+#### Login User
+
+```http
+  POST /user
+```
+
+| Parameter  | Type     | Description  |
+| :--------- | :------- | :----------- |
+| `email`    | `string` | **Required** |
+| `password` | `string` | **Required** |
 
 #### Get user
 
@@ -80,6 +93,8 @@ Try API here: [Postman](https://www.postman.com/bmf10/workspace/boo/collection/9
   POST /comment
 ```
 
+##### Body
+
 | Parameter     | Type       | Description                                                                                                     |
 | :------------ | :--------- | :-------------------------------------------------------------------------------------------------------------- |
 | `title`       | `string`   | **Required**                                                                                                    |
@@ -88,7 +103,12 @@ Try API here: [Postman](https://www.postman.com/bmf10/workspace/boo/collection/9
 | `mbti`        | `string`   | Select one: INFP, INFJ, ENFP, ENFJ, INTJ, INTP, ENTP, ENTJ, ISFP, ISFJ, ESFP, ESFJ, ISTP, ISTJ, ESTP, ESTJ      |
 | `zodiac`      | `string`   | Select one: Aries, Taurus, Gemini, Cancer, Leo, Virgo, Libra, Scorpio, Sagittarius, Capricorn, Aquarius, Pisces |
 | `profileId`   | `ObjectId` | **Required**. Profile to be commented on                                                                        |
-| `userId`      | `ObjectId` | **Required**. User who will comment                                                                             |
+
+##### Header
+
+| Parameter       | Type             | Description                            |
+| :-------------- | :--------------- | :------------------------------------- |
+| `Authorization` | `Bearer {token}` | **Required**. Get token with login API |
 
 #### Get Comment List
 
@@ -117,3 +137,9 @@ Try API here: [Postman](https://www.postman.com/bmf10/workspace/boo/collection/9
 | :---------- | :------- | :----------- |
 | `userId`    | `string` | **Required** |
 | `commentId` | `string` | **Required** |
+
+##### Header
+
+| Parameter       | Type             | Description                            |
+| :-------------- | :--------------- | :------------------------------------- |
+| `Authorization` | `Bearer {token}` | **Required**. Get token with login API |
