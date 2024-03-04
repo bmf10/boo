@@ -135,7 +135,6 @@ Try API here: [Postman](https://www.postman.com/bmf10/workspace/boo/collection/9
 
 | Parameter   | Type     | Description  |
 | :---------- | :------- | :----------- |
-| `userId`    | `string` | **Required** |
 | `commentId` | `string` | **Required** |
 
 ##### Header
