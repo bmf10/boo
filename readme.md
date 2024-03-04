@@ -67,7 +67,7 @@ Try API here: [Postman](https://www.postman.com/bmf10/workspace/boo/collection/9
 #### Login User
 
 ```http
-  POST /user
+  POST /user/login
 ```
 
 | Parameter  | Type     | Description  |
