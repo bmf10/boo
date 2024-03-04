@@ -3,6 +3,7 @@
 import request from 'supertest'
 import User, { IUser } from '../../../models/User'
 import { app, server } from '../../../index'
+import { hash } from '../../../utils/password'
 
 interface IUserResponse {
   data: IUser
@@ -22,6 +23,7 @@ describe('POST /user', () => {
       email: 'test@example.com',
       name: 'Test User',
       image: 'https://example.com/image.jpg',
+      password: '123456',
     }
 
     const res = await request(app).post('/user/').send(mockUser)
@@ -29,7 +31,9 @@ describe('POST /user', () => {
     const responseBody: IUserResponse = res.body
 
     expect(res.status).toBe(200)
-    expect(responseBody.data).toEqual(expect.objectContaining(mockUser))
+    expect(responseBody.data).toHaveProperty('name')
+    expect(responseBody.data).toHaveProperty('image')
+    expect(responseBody.data).toHaveProperty('email')
 
     // Verify that the user was saved in the database
     const user: IUser | null = await User.findOne({ email: 'test@example.com' })
@@ -42,6 +46,7 @@ describe('POST /user', () => {
       email: 'user@example.com',
       name: 'Test User',
       image: 'https://example.com/image.jpg',
+      password: await hash('123456'),
     })
     await userExist.save()
 
@@ -49,6 +54,7 @@ describe('POST /user', () => {
       email: 'user@example.com',
       name: 'Test User',
       image: 'https://example.com/image.jpg',
+      password: '123456',
     }
 
     const res = await request(app).post('/user/').send(mockUser)

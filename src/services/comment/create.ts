@@ -7,8 +7,9 @@ import Comment, {
   mbti,
   zodiac,
 } from '../../models/Comment'
-import User from '../../models/User'
 import { BadRequestError } from 'express-response-errors'
+import Profile from '../../models/Profile'
+import authMiddleware from '../../middlewares/auth'
 
 type CreateCommentType = Omit<IComment, 'likeCount' | 'createdAt' | 'updateAt'>
 
@@ -20,32 +21,31 @@ const validationSchema: schema = {
     mbti: Joi.valid(...mbti),
     zodiac: Joi.valid(...zodiac),
     profileId: Joi.string().hex().length(24).required(),
-    userId: Joi.string().hex().length(24).required(),
   }),
 }
 
 const requestHandler: RequestHandler = async (req, res, next) => {
+  const userId = res.locals.user._id
   const body = req.body as CreateCommentType
 
-  const profile = await User.findById(body.profileId)
+  const profile = await Profile.findById(body.profileId)
 
   if (!profile) {
     return next(new BadRequestError('Profile not found'))
   }
 
-  const user = await User.findById(body.userId)
-
-  if (!user) {
-    return next(new BadRequestError('User not found'))
-  }
-
-  const comment = await Comment.create(body)
+  const comment = await Comment.create({ ...body, userId })
 
   res.json(successResponse(comment))
 }
 
 const router = Router()
 
-router.post('/', validate(validationSchema, { context: true }), requestHandler)
+router.post(
+  '/',
+  authMiddleware,
+  validate(validationSchema, { context: true }),
+  requestHandler,
+)
 
 export default router

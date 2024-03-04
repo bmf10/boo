@@ -3,6 +3,7 @@
 import request from 'supertest'
 import User, { IUser } from '../../../models/User'
 import { app, server } from '../../../index'
+import { hash } from '../../../utils/password'
 
 describe('GET /user/:id', () => {
   afterAll(() => {
@@ -18,6 +19,7 @@ describe('GET /user/:id', () => {
       email: 'test@example.com',
       name: 'Test User',
       image: 'https://example.com/image.jpg',
+      password: await hash('123456'),
     })
     await mockUser.save()
 

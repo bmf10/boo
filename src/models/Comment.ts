@@ -76,7 +76,7 @@ const CommentSchema = new mongoose.Schema<IComment>(
   {
     profileId: {
       type: mongoose.Types.ObjectId,
-      ref: 'User',
+      ref: 'Profile',
       required: true,
     },
     userId: {

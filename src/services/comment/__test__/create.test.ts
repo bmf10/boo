@@ -3,6 +3,8 @@
 import request from 'supertest'
 import { app, server } from '../../../index'
 import User from '../../../models/User'
+import { hash } from '../../../utils/password'
+import Profile from '../../../models/Profile'
 
 describe('POST /comment', () => {
   afterEach(() => {
@@ -17,13 +19,23 @@ describe('POST /comment', () => {
       email: 'user@example.com',
       name: 'Test User',
       image: 'https://example.com/image.jpg',
+      password: await hash('123456'),
     })
     await mockUser.save()
 
-    const mockProfile = new User({
-      email: 'profile@example.com',
-      name: 'Test User',
-      image: 'https://example.com/image.jpg',
+    const userLogin = await request(app).post('/user/login').send({
+      email: 'user@example.com',
+      password: '123456',
+    })
+
+    const token: string = userLogin.body.data.token
+
+    const mockProfile = new Profile({
+      name: 'Test Name',
+      image: 'Test Image',
+      enneagram: '2w3',
+      mbti: 'INTJ',
+      zodiac: 'Aries',
     })
     await mockProfile.save()
 
@@ -34,10 +46,12 @@ describe('POST /comment', () => {
       mbti: 'INTJ',
       zodiac: 'Aries',
       profileId: mockProfile.id,
-      userId: mockUser.id,
     }
 
-    const response = await request(app).post('/comment/').send(comment)
+    const response = await request(app)
+      .post('/comment/')
+      .set('Authorization', `Bearer ${token}`)
+      .send(comment)
 
     expect(response.status).toBe(200)
     expect(response.body.data.title).toBe(comment.title)
@@ -45,6 +59,21 @@ describe('POST /comment', () => {
   }, 10000)
 
   it('should return 400 if profile not found', async () => {
+    const mockUser = new User({
+      email: 'user@example.com',
+      name: 'Test User',
+      image: 'https://example.com/image.jpg',
+      password: await hash('123456'),
+    })
+    await mockUser.save()
+
+    const userLogin = await request(app).post('/user/login').send({
+      email: 'user@example.com',
+      password: '123456',
+    })
+
+    const token: string = userLogin.body.data.token
+
     const comment = {
       title: 'Test title',
       description: 'Test description',
@@ -53,11 +82,12 @@ describe('POST /comment', () => {
       zodiac: 'Aries',
       //invalid random hex
       profileId: '65e422c97fc51deb6980c3c7',
-      //invalid random hex
-      userId: '65e422c97fc51deb6980c3c1',
     }
 
-    const response = await request(app).post('/comment/').send(comment)
+    const response = await request(app)
+      .post('/comment/')
+      .set('Authorization', `Bearer ${token}`)
+      .send(comment)
 
     expect(response.status).toBe(400)
     expect(response.body.message).toBe('Profile not found')

@@ -5,25 +5,19 @@ import Comment, { IComment } from '../../models/Comment'
 import { BadRequestError } from 'express-response-errors'
 import { Document } from 'mongoose'
 import { successResponse } from '../../utils/general'
-import User from '../../models/User'
+import authMiddleware from '../../middlewares/auth'
 
 type CreateLikeType = Omit<ILike, 'createdAt' | 'updateAt'>
 
 const validationSchema: schema = {
   body: Joi.object<CreateLikeType>({
-    userId: Joi.string().hex().length(24).required(),
     commentId: Joi.string().hex().length(24).required(),
   }),
 }
 
 const requestHandler: RequestHandler = async (req, res, next) => {
+  const userId = res.locals.user._id
   const body = req.body as CreateLikeType
-
-  const user = await User.findById(body.userId)
-
-  if (!user) {
-    return next(new BadRequestError('User not found'))
-  }
 
   const comment = (await Comment.findById(
     body.commentId,
@@ -34,18 +28,18 @@ const requestHandler: RequestHandler = async (req, res, next) => {
   }
 
   const like = await Like.findOne({
-    userId: body.userId,
+    userId,
     commentId: body.commentId,
   })
 
   if (!like) {
     comment.likeCount += 1
     await comment.save()
-    await Like.create(body)
+    await Like.create({ ...body, userId })
   } else {
     comment.likeCount -= 1
     await comment.save()
-    await Like.deleteOne({ userId: body.userId, commentId: body.commentId })
+    await Like.deleteOne({ userId, commentId: body.commentId })
   }
 
   res.json(successResponse(comment))
@@ -53,6 +47,11 @@ const requestHandler: RequestHandler = async (req, res, next) => {
 
 const router = Router()
 
-router.post('/', validate(validationSchema, { context: true }), requestHandler)
+router.post(
+  '/',
+  authMiddleware,
+  validate(validationSchema, { context: true }),
+  requestHandler,
+)
 
 export default router

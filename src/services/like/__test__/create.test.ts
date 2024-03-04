@@ -6,10 +6,12 @@ import mongoose from 'mongoose'
 import User from '../../../models/User'
 import Comment from '../../../models/Comment'
 import Like from '../../../models/Like'
+import { hash } from '../../../utils/password'
 
 describe('POST /like', () => {
   let userId: string
   let commentId: string
+  let token: string
 
   beforeEach(async () => {
     // Create a user and a comment in the database
@@ -17,9 +19,15 @@ describe('POST /like', () => {
       email: 'user@example.com',
       name: 'Test User',
       image: 'https://example.com/image.jpg',
+      password: await hash('123456'),
     })
     await user.save()
     userId = user._id.toString()
+    const userLogin = await request(app).post('/user/login').send({
+      email: 'user@example.com',
+      password: '123456',
+    })
+    token = userLogin.body.data.token
 
     const comment = new Comment({
       title: 'Test title',
@@ -49,7 +57,8 @@ describe('POST /like', () => {
   it('should create a like when there is no existing like from the user', async () => {
     const res = await request(app)
       .post('/like')
-      .send({ userId, commentId })
+      .set('Authorization', `Bearer ${token}`)
+      .send({ commentId })
       .expect(200)
 
     // Check the response
@@ -68,7 +77,8 @@ describe('POST /like', () => {
 
     const res = await request(app)
       .post('/like')
-      .send({ userId, commentId })
+      .set('Authorization', `Bearer ${token}`)
+      .send({ commentId })
       .expect(200)
 
     // Check the response
@@ -79,20 +89,11 @@ describe('POST /like', () => {
     expect(likeInDb).toBeNull()
   })
 
-  it('should return 400 if the user does not exist', async () => {
-    const res = await request(app)
-      .post('/like')
-      .send({ userId: new mongoose.Types.ObjectId().toString(), commentId })
-      .expect(400)
-
-    // Check the response
-    expect(res.body.message).toBe('User not found')
-  })
-
   it('should return 400 if the comment does not exist', async () => {
     const res = await request(app)
       .post('/like')
-      .send({ userId, commentId: new mongoose.Types.ObjectId().toString() })
+      .set('Authorization', `Bearer ${token}`)
+      .send({ commentId: new mongoose.Types.ObjectId().toString() })
       .expect(400)
 
     // Check the response
